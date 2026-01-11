@@ -1,0 +1,38 @@
+{
+    "morning_star": {
+        "serial": "65a#Y4",
+        "file": "REC_01_HALO.raw",
+        "link": "https://drive.google.com/uc?export=download&id=1jjGMldRyG8rNn8Tvu-SbpT5t7ZSbpD_8",
+        "desc": "user:e_nussbaum"
+    },
+    "fallen_star": {
+        "serial": "65a#Y4",
+        "file": "REC_02_ETERNAL.raw",
+        "link": "https://drive.google.com/uc?export=download&id=16VUpzuBUNY7tlDRc0aODvFZZngwZJph7",
+        "desc": "user:a_fitzwilliam"
+    },
+    "outer_space": {
+        "serial": "65a#Y4",
+        "file": "REC_03_AEGIS.raw",
+        "link": "https://drive.google.com/uc?export=download&id=1K_8jr8mLZvX0kS7u0VmQlICll8B9hHwV",
+        "desc": "user:l_richer"
+    },
+    "dark_memories": {
+        "serial": "65a#Y4",
+        "file": "SILICA_AI_1990.avi",
+        "link": "https://drive.google.com/uc?export=download&id=1CGyz95asNjfhZFTwD7F_oUi4_wYNeyfO",
+        "desc": "user:t_anderson"
+    },
+    "soul_symphony": {
+        "serial": "65a#Y4",
+        "file": "DEMO_HELENA.avi",
+        "link": "https://drive.google.com/uc?export=download&id=1rOSVCP6GRfKSeLlgAuaYTRQZMPokjjvU",
+        "desc": "user:h_moreau"
+    },
+    "phoenix_fire": {
+        "serial": "65a#Y4",
+        "file": "CLODES_NOTE.raw",
+        "link": "https://drive.google.com/uc?export=download&id=1RY69BYlc4idU9e84IkVvXtRp2fqYvulE",
+        "desc": "user:h_clode"
+    }
+}
