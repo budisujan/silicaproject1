@@ -16,7 +16,7 @@ const outputLog = document.getElementById('output');
     "fallen_star": {
         serial: "65a#Y4",
         file: "REC_02_ETERNAL.raw",
-        link: "https://drive.google.com/uc?export=download&id=16VUpzuBUNY7tlDRc0aODvFZZngwZJph7",
+        link: "https://drive.google.com/uc?export=download&id=10tbKMVrO5-AAWyTx9ki29doJyj7pLFHg",
         desc: "user:a_fitzwilliam"
     },
     "outer_space": {
