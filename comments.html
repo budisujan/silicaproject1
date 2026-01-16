@@ -1,0 +1,118 @@
+<style>
+  .arg-comment-section {
+    max-width: 650px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    border-top: 1px solid #eeeeee;
+  }
+  .arg-title {
+    font-size: 15px;
+    font-weight: bold;
+    color: #444;
+    margin-bottom: 25px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+  .comment-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+  }
+  /* Ukuran PP diperkecil menjadi 32px */
+  .avatar-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #ddd;
+    flex-shrink: 0;
+  }
+  /* Style khusus untuk balasan (reply) */
+  .comment-reply-wrapper {
+    margin-left: 44px; /* Memberikan efek menjorok */
+    border-left: 2px solid #f0f0f0;
+    padding-left: 15px;
+  }
+  .comment-content {
+    flex-grow: 1;
+  }
+  .comment-header {
+
+    display: flex;
+
+    flex-direction: column; /* Membuat tanggal di bawah nama */
+
+    margin-bottom: 8px;
+
+  }
+  .author-name {
+    font-weight: bold;
+    color: #3498db;
+    text-decoration: none;
+    font-size: 13px;
+  }
+  .author-name:hover {
+    text-decoration: underline;
+  }
+  .comment-timestamp {
+    font-size: 10px;
+    color: #bbb;
+    margin-left: 6px;
+  }
+  .comment-text {
+    font-size: 13.5px;
+    color: #333;
+    line-height: 1.4;
+  }
+  .comment-actions {
+    margin-top: 5px;
+    font-size: 11px;
+  }
+  .reply-link {
+    color: #999;
+    text-decoration: none;
+  }
+  /* Teks misterius */
+  
+</style>
+
+<div class="arg-comment-section">
+  <div class="arg-title">2 Komentar</div>
+
+  <div class="comment-row">
+    <img src="https://ui-avatars.com/api/?name=sunotoaryotejo&background=3498db&color=fff" class="avatar-circle">
+    <div class="comment-content">
+      <div class="comment-header">
+        <a href="https://sunotoaryotejo.blogspot.com" class="author-name">Sunoto Aryotejo</a>
+        <span class="comment-timestamp">17 Januari 2011 23:20</span>
+      </div>
+      <div class="comment-text">
+        0D 5C 20 20 7C 20 20 2F 0D 2D 2D 28 6F 29 2D 2D 0D 2F 20 20 7C 20 20 5C 0D 36 35 61 23 59 34 0D 78 0D 20 5C 0D 20 20 5C 0D 20 20 20 2A 0D 42 79 36 34 34 5F 61 6E 44 0D 2A 20 2E 20 2B 0D 2E 20 2A 20 2E 0D 2B 20 2E 20 2A 0D 35 34 71 32 33 28 2B 30 48 0D 7C 2D 7B 20 28 40 29 20 7D 2D 7C 0D 48 66 6E 36 34 70 26 5F 34 23 24 2B 2A 0D 20 20 20 20 7C 5C 0D 20 20 5F 5F 7C 0D 28 5F 5F 5F 29 0D 48 6C 6E 37 38 32 38 26 24 5F 5F 40 23 40 38 38 32 38 38 0D 5C 2D 2D 2D 2D 2D 22 4F 3E 2D 2D 2D 2D 2D 2F 0D 20 20 20 20 20 20 2F 5E 5C 20 20 20 20 20 0D 31 32 34 32 35 31
+      </div>
+      <div class="comment-actions"><a href="#" class="reply-link">Balas</a></div>
+    </div>
+  </div>
+
+  <div class="comment-reply-wrapper">
+    <div class="comment-row">
+      <img src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y" class="avatar-circle">
+      <div class="comment-content">
+        <div class="comment-header">
+          <a href="https://nolanricher.blogspot.com" class="author-name">Nolan Richer</a>
+
+        <span class="comment-timestamp">18 Januari 2011 14:20</span>
+
+      </div>
+        <div class="comment-text">
+          <span style="color: #3498db; font-weight: bold;">@sunotoaryotejo</span> Kamu tidak pernah lewat sana.
+        </div>
+        <div class="comment-actions"><a href="#" class="reply-link">Balas</a></div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
