@@ -76,7 +76,7 @@ const outputLog = document.getElementById('output');
                 writeLine(` - ${unit}`, "#888");
             });
             // Menambah 1 data tambahan yang belum terunduh
-            writeLine(" - [UNKNOWN_SIGNAL] status: PENDING_DOWNLOAD", "#ffaa00");
+            writeLine(" - [UNKNOWN_FILE_NOT_DOWNLOADED]", "#ffaa00");
             
             writeLine("<br>>> AUTH REQUIRED: [unit_name] [serial_number]", "#fff");
         } else {
