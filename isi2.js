@@ -76,7 +76,7 @@ function showHelp() {
         Object.keys(silicaAuth).forEach(unit => {
             writeLine(` - ${unit}`, "#888");
         });
-        writeLine(" - [UNKNOWN_FILE_NOT_DOWNLOADED]", "#ffaa00");
+        writeLine(" - [UNKNOWN_FILE] STATUS: NOT_DOWNLOADED", "#ffaa00");
         writeLine("<br>>> AUTH REQUIRED: [unit_name] [serial_number]", "#fff");
     } else {
         writeLine(">> COMMANDS: ls, cat [file], open [file], clear, logout", "#888");
