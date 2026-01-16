@@ -11,37 +11,37 @@ const silicaAuth = {
     "morning_star": {
         serial: "65a#Y4",
         file: "REC_01_HALO.raw",
-        link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xampHTWxkUnlHOXJOblR2dS1TYnA3WlRicERfOA==",
+        link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xampHTWxkUnlHOHJObjhUdnUtU2JwVDV0N1pTYnBEXzg=",
         desc: "user:e_nussbaum"
     },
     "fallen_star": {
         serial: "65a#Y4",
         file: "REC_02_ETERNAL.raw",
-        link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xMHRiS01Wck81LUFBV3lUeDlraTI5ZG9KeWpwTEZIZw==",
+        link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xMHRiS01Wck81LUFBV3lUeDlraTI5ZG9KeWo3cExGSGc=",
         desc: "user:a_fitzwilliam"
     },
     "outer_space": {
         serial: "65a#Y4",
         file: "REC_03_AEGIS.raw",
-        link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xS184anI4bUxaVlgwazV0dTBWbVFsSUNsbEI5aEh3Vg==",
+        link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xS184anI4bUxadlgwa1M3dTBWbVFsSUNsbDhCOWhId1Y=",
         desc: "user:l_richer"
     },
     "dark_memories": {
         serial: "65a#Y4",
         file: "SILICA_AI_1990.avi",
-        link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xQ0d5ejk1YXNOamZoWkZUR0QwRl9vVWlfNHdZTmV5Zk8=",
+        link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xQ0d5ejk1YXNOamZoWkZUd0Q3Rl9vVWk0X3dZTmV5Zk8=",
         desc: "user:t_anderson"
     },
     "soul_symphony": {
         serial: "65a#Y4",
         file: "DEMO_HELENA.avi",
-        link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xUmV0YTRqSnRSNmdYcXFzYzRIYmZXRmJxeXN2elA=",
+        link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xUmV0YTRqSnRSNmc2WHFDc2M0SGJmNVdGMmJxeXN2elA=",
         desc: "user:h_moreau"
     },
     "phoenix_fire": {
         serial: "65a#Y4",
         file: "CLODES_NOTE.raw",
-        link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xUlk2OUJZbGM0aWRVOWU4NElrVnh0UnAyZnF5dnVsRQ==",
+        link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xUlk2OUJZbGM0aWRVOWU4NElrVnZYdFJwMmZxWXZ1bEU=",
         desc: "user:h_clode"
     }
 };
