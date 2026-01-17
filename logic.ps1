@@ -1,129 +1,134 @@
+# --- CONFIG SERVER ---
 $port = 3000
 $listener = New-Object System.Net.HttpListener
 $listener.Prefixes.Add("http://*:$port/")
 
-# SERVER HANYA TEMPAT MENITIP DUA VARIABEL INI
-$global:tombolTerkunci = "false"
-$global:pemenangId = ""
+# Variabel Penyimpan (Hanya ID dan Status)
+$global:status = "false"
+$global:user = ""
 
+# --- KONTEN HTML ---
 $html = @"
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Bel Interaktif</title>
+    <title>Bel Cepat Tepat</title>
     <style>
-        body { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f0f0; font-family: sans-serif; }
-        #myIdText { font-size: 18px; background: white; padding: 10px 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; border-left: 5px solid #3498db; }
-        .btn-bel { padding: 30px 60px; font-size: 28px; font-weight: bold; color: white; background-color: #3498db; border: none; border-radius: 15px; cursor: pointer; box-shadow: 0 8px #2980b9; }
-        .btn-bel:active { transform: translateY(4px); box-shadow: 0 4px #1c5980; }
-        .btn-bel:disabled { background-color: #bdc3c7 !important; box-shadow: none !important; opacity: 0.7; cursor: not-allowed; }
-        #status { margin-top: 20px; font-weight: bold; font-size: 20px; color: #2ecc71; }
-        .btn-reset { margin-top: 30px; padding: 10px; background: #e74c3c; color: white; border: none; cursor: pointer; border-radius: 5px; }
+        body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #ecf0f1; font-family: sans-serif; }
+        .bel { padding: 60px 100px; font-size: 50px; font-weight: bold; cursor: pointer; background: #2980b9; color: white; border: none; border-radius: 25px; box-shadow: 0 12px #1c5980; transition: 0.1s; }
+        .bel:active { transform: translateY(4px); box-shadow: 0 8px #1c5980; }
+        .bel:disabled { background: #95a5a6 !important; box-shadow: none; transform: translateY(8px); cursor: not-allowed; }
+        #info { font-size: 30px; margin-bottom: 30px; font-weight: bold; color: #2c3e50; }
+        .reset { margin-top: 60px; padding: 15px 30px; background: #e74c3c; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
-
-    <div id="myIdText">Mendaftarkan...</div>
-    <button id="btnBel" class="btn-bel" onclick="eksekusiBel()">BEL BIRU</button>
-    <div id="status">Status: Siap</div>
-    
-    <button class="btn-reset" onclick="resetServer()">RESET BEL SEMUA ORANG</button>
+    <div id="info">Menghubungkan...</div>
+    <button id="btn" class="bel" onclick="pencet()">BEL</button>
+    <button class="reset" onclick="reset()">RESET ULANG</button>
 
     <script>
-        // 1. GENERATE ID UNIK OTOMATIS
-        const idDefault = 'User_' + Math.floor(1000 + Math.random() * 9000);
-        const myId = prompt("Masukkan Username Anda:", idDefault) || idDefault;
-        document.getElementById('myIdText').innerText = "ID Anda: " + myId;
+        // Prompt ID Unik
+        const idDefault = 'Pemain_' + Math.floor(1000 + Math.random() * 9000);
+        const myId = prompt("Masukkan Nama Anda:", idDefault) || idDefault;
+        
+        const btn = document.getElementById('btn');
+        const info = document.getElementById('info');
 
-        const btn = document.getElementById('btnBel');
-        const statusText = document.getElementById('status');
-
-        // 2. FUNGSI SUARA (BEEP)
+        // Fungsi Suara Beep
         function bunyi() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
                 osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(440, ctx.currentTime);
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                osc.connect(gain); gain.connect(ctx.destination);
-                osc.start(); setTimeout(() => osc.stop(), 800);
-            } catch(e) {}
+                osc.connect(ctx.destination);
+                osc.start(); setTimeout(() => osc.stop(), 600);
+            } catch(e){}
         }
 
-        // 3. MEKANISME TEKAN
-        async function eksekusiBel() {
+        // Kirim perintah ke server
+        async function pencet() {
             bunyi();
-            // Kirim ke server agar orang lain juga disable
-            try {
-                await fetch('/update?lock=true&user=' + encodeURIComponent(myId));
-            } catch(e) {
-                // Jika mencoba tanpa server, tetap disable sendiri
-                btn.disabled = true;
-                statusText.innerText = "Status: Terkunci (Tanpa Server)";
-            }
+            btn.disabled = true; 
+            // Mencoba mengunci server dengan nama kita
+            await fetch('/update?lock=true&user=' + encodeURIComponent(myId));
         }
 
-        async function resetServer() {
-            try {
-                await fetch('/update?lock=false&user=');
-            } catch(e) {
-                btn.disabled = false;
-                statusText.innerText = "Status: Siap";
-            }
+        // Fungsi Reset
+        async function reset() {
+            await fetch('/update?lock=false&user=');
         }
 
-        // 4. MONITORING (Hanya jalan jika ada server)
+        // Polling 5ms (Sangat Akurat)
         setInterval(async () => {
             try {
                 const res = await fetch('/data');
                 const data = await res.json();
+                
                 if (data.isLocked === "true") {
                     btn.disabled = true;
-                    statusText.innerText = "DITEKAN OLEH: " + data.user;
-                    statusText.style.color = "#e74c3c";
+                    info.innerText = "PEMENANG: " + data.user;
+                    info.style.color = "#c0392b";
                 } else {
                     btn.disabled = false;
-                    statusText.innerText = "Status: SIAP";
-                    statusText.style.color = "#2ecc71";
+                    info.innerText = "SIAP... TEKAN!";
+                    info.style.color = "#27ae60";
                 }
-            } catch (e) {
-                // Jika server tidak ada, biarkan mekanisme mandiri bekerja
-            }
-        }, 500);
+            } catch (e) {}
+        }, 5);
     </script>
 </body>
 </html>
 "@
 
-Write-Host "--- SERVER AKTIF ---" -ForegroundColor Cyan
-Write-Host "Buka browser ke: http://localhost:3000"
+# --- JALANKAN SERVER ---
+Clear-Host
+Write-Host "=======================================" -ForegroundColor Cyan
+Write-Host " SERVER BEL AKTIF (Windows 7 Mode)     " -ForegroundColor Cyan
+Write-Host "=======================================" -ForegroundColor Cyan
+Write-Host "Buka: http://localhost:3000" -ForegroundColor White
+Write-Host "Tekan Ctrl+C untuk mematikan server." -ForegroundColor Red
+
 $listener.Start()
 
-while ($listener.IsListening) {
-    $ctx = $listener.GetContext()
-    $req = $ctx.Request
-    $res = $ctx.Response
-    $res.AddHeader("Access-Control-Allow-Origin", "*")
+try {
+    while ($listener.IsListening) {
+        $ctx = $listener.GetContext()
+        $req = $ctx.Request
+        $res = $ctx.Response
+        $res.AddHeader("Access-Control-Allow-Origin", "*")
+        $path = $req.Url.LocalPath
 
-    if ($req.Url.LocalPath -eq "/data") {
-        $json = '{"isLocked": "' + $global:tombolTerkunci + '", "user": "' + $global:pemenangId + '"}'
-        $buffer = [System.Text.Encoding]::UTF8.GetBytes($json)
-        $res.ContentType = "application/json"
-    } 
-    elseif ($req.Url.LocalPath -eq "/update") {
-        $global:tombolTerkunci = $req.QueryString["lock"]
-        $global:pemenangId = $req.QueryString["user"]
-        $buffer = [System.Text.Encoding]::UTF8.GetBytes("OK")
-    } 
-    else {
-        $buffer = [System.Text.Encoding]::UTF8.GetBytes($html)
-        $res.ContentType = "text/html"
+        if ($path -eq "/update") {
+            $newLock = $req.QueryString["lock"]
+            $newUser = $req.QueryString["user"]
+
+            # LOGIKA UTAMA: Hanya terima jika server sedang kosong (false)
+            # ATAU jika ini perintah reset (false)
+            if ($global:status -eq "false" -or $newLock -eq "false") {
+                $global:status = $newLock
+                $global:user = $newUser
+                Write-Host "Status Terkunci Oleh: $global:user" -ForegroundColor Green
+            } else {
+                Write-Host "Ditolak: $newUser (Terlambat)" -ForegroundColor Yellow
+            }
+            $buffer = [System.Text.Encoding]::UTF8.GetBytes("OK")
+        } 
+        elseif ($path -eq "/data") {
+            $json = '{"isLocked": "' + $global:status + '", "user": "' + $global:user + '"}'
+            $buffer = [System.Text.Encoding]::UTF8.GetBytes($json)
+            $res.ContentType = "application/json"
+        } 
+        else {
+            $buffer = [System.Text.Encoding]::UTF8.GetBytes($html)
+            $res.ContentType = "text/html"
+        }
+
+        $res.ContentLength64 = $buffer.Length
+        $res.OutputStream.Write($buffer, 0, $buffer.Length)
+        $res.Close()
     }
-
-    $res.ContentLength64 = $buffer.Length
-    $res.OutputStream.Write($buffer, 0, $buffer.Length)
-    $res.Close()
+} finally {
+    $listener.Stop()
 }
