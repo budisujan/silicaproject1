@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Battle of the Bell - LAN Edition</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #1a1a1a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: white; }
+        
+        /* Representasi pemain lain (kursor mereka) */
+        .player { width: 15px; height: 15px; position: absolute; border-radius: 50%; transition: 0.1s; pointer-events: none; }
+        .other { background: #ff4d4d; box-shadow: 0 0 10px #ff4d4d; }
+        .name-tag { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 12px; white-space: nowrap; font-weight: bold; background: rgba(0,0,0,0.5); padding: 2px 5px; border-radius: 3px; }
+
+        /* UI Utama */
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            gap: 20px;
+        }
+
+        #winnerText {
+            font-size: 32px;
+            font-weight: bold;
+            color: #f1c40f;
+            height: 40px;
+            text-shadow: 0 0 15px rgba(241, 196, 15, 0.5);
+        }
+
+        #mainBtn {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            border: none;
+            background: radial-gradient(circle, #e74c3c, #c0392b);
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 15px #992d22, 0 20px 30px rgba(0,0,0,0.5);
+            transition: all 0.1s;
+        }
+
+        #mainBtn:hover { background: radial-gradient(circle, #ff5e4d, #e74c3c); }
+        
+        #mainBtn:active {
+            box-shadow: 0 5px #992d22;
+            transform: translateY(10px);
+        }
+
+        #mainBtn:disabled {
+            background: #555 !important;
+            box-shadow: 0 5px #333 !important;
+            cursor: not-allowed;
+            transform: translateY(10px);
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="winnerText"></div>
+        <button id="mainBtn">PENCET!</button>
+    </div>
+
+    <script>
+        // 1. Inisialisasi ID dan Username
+        const defaultId = 'Player_' + Math.floor(Math.random() * 1000);
+        const myId = prompt("Masukkan Username Anda:", defaultId) || defaultId;
+        
+        const mainBtn = document.getElementById('mainBtn');
+        const winnerText = document.getElementById('winnerText');
+        let isLocked = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        // Suara Bel (Synthesizer)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playBell() {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            setTimeout(() => osc.stop(), 800);
+        }
+
+        // 2. Kirim koordinat (agar server .ps1 tidak error)
+        document.addEventListener('mousemove', (e) => {
+            lastX = e.pageX;
+            lastY = e.pageY;
+            // Kita tidak panggil fetch di sini agar tidak spamming, 
+            // fetch dipanggil oleh interval di bawah.
+        });
+
+        // Logika Klik
+        mainBtn.addEventListener('click', () => {
+            if (!isLocked) {
+                // Mengirim aksi melalui URL parameter (pastikan server .ps1 kamu bisa membaca param 'action')
+                // Jika server .ps1 hanya menerima x, y, id, maka logika menang ada di sisi server.
+                updateServer(lastX, lastY, true);
+            }
+        });
+
+        function updateServer(x, y, isClicking = false) {
+            let url = `?id=${encodeURIComponent(myId)}&x=${x}&y=${y}`;
+            if(isClicking) url += `&action=klik`; // Tambahan parameter tanpa merubah struktur variabel utama
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    renderOthers(data.players);
+                    handleGameStatus(data.game); // Asumsi server mengembalikan objek status game
+                })
+                .catch(err => console.log("Server belum siap..."));
+        }
+
+        function handleGameStatus(game) {
+            if (!game) return;
+
+            const now = Date.now();
+            // Jika ada pemenang dan masih dalam masa lock (10 detik)
+            if (game.winner && game.disabledUntil > now) {
+                if (!isLocked) { // Baru saja ter-lock
+                    playBell();
+                    isLocked = true;
+                }
+                mainBtn.disabled = true;
+                winnerText.innerText = `Pemenang: ${game.winner}`;
+            } else {
+                isLocked = false;
+                mainBtn.disabled = false;
+                winnerText.innerText = "";
+            }
+        }
+
+        function renderOthers(players) {
+            for (let id in players) {
+                if (id === myId) continue;
+                let el = document.getElementById(id);
+                if (!el) {
+                    el = document.createElement('div');
+                    el.id = id;
+                    el.className = 'player other';
+                    el.innerHTML = `<div class="name-tag">${id}</div>`;
+                    document.body.appendChild(el);
+                }
+                el.style.left = players[id].x + 'px';
+                el.style.top = players[id].y + 'px';
+            }
+        }
+
+        // Jalankan sinkronisasi secara rutin
+        setInterval(() => {
+            updateServer(lastX, lastY);
+        }, 200); // 5 kali per detik (hemat bandwidth)
+
+    </script>
+</body>
+</html>
