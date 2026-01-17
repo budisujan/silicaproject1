@@ -1,175 +1,113 @@
-# Jalankan di PowerShell: Menyiapkan Server HTTP di Port 8080
+# Konfigurasi Server
 $port = 8080
+$endpoint = "http://*:$port/"
 $listener = New-Object System.Net.HttpListener
-$listener.Prefixes.Add("http://*:$port/")
+$listener.Prefixes.Add($endpoint)
 $listener.Start()
 
-$players = @{}      # Variabel untuk menyimpan posisi pemain
-$gameState = @{     # Status game (siapa pemenangnya dan kapan tombol aktif lagi)
-    winner = ""
-    disabledUntil = 0
-}
+# State Global
+$global:lastWinner = ""
+$global:isLocked = $false
+$global:lockTime = [DateTime]::MinValue
 
-Write-Host "Server jalan di http://localhost:$port" -ForegroundColor Cyan
-Write-Host "Bagikan IP komputermu ke teman dalam satu jaringan LAN!"
+Write-Host "Server berjalan di http://$($(ipconfig | findstr [0-9]\.[0-9]\.[0-9]\.[0-9])[0].Split()[-1]):$port"
+Write-Host "Tekan Ctrl+C untuk berhenti."
 
-try {
-    while ($listener.IsListening) {
-        $context = $listener.GetContext()
-        $request = $context.Request
-        $response = $context.Response
-
-        # Routing URL
-        $query = $request.QueryString
-        $id = $query["id"]
-        $x = $query["x"]
-        $y = $query["y"]
-        $action = $query["action"] # Untuk mendeteksi klik tombol
-
-        if ($id) {
-            $currentTime = [DateTimeOffset]::Now.ToUnixTimeMilliseconds()
-
-            # Logika Jika Ada yang Klik Tombol
-            if ($action -eq "klik" -and $currentTime -gt $gameState.disabledUntil) {
-                $gameState.winner = $id
-                $gameState.disabledUntil = $currentTime + 10000 # Lock 10 detik
-            }
-
-            # Update posisi pemain
-            $players[$id] = @{ x = $x; y = $y; lastUpdate = $currentTime }
-
-            # Hapus pemain yang tidak aktif > 5 detik
-            $keys = $players.Keys | ForEach-Object { $_ }
-            foreach ($k in $keys) {
-                if ($currentTime - $players[$k].lastUpdate -gt 5000) { $players.Remove($k) }
-            }
-
-            # Response JSON
-            $data = @{ players = $players; game = $gameState; serverTime = $currentTime }
-            $buffer = [System.Text.Encoding]::UTF8.GetBytes(($data | ConvertTo-Json))
-            $response.ContentType = "application/json"
-            $response.ContentLength64 = $buffer.Length
-            $response.OutputStream.Write($buffer, 0, $buffer.Length)
-        } else {
-            # Kirim halaman HTML jika akses biasa (tanpa ID)
-            $html = @"
+# Konten HTML, CSS, dan JS
+$htmlContent = @"
 <!DOCTYPE html>
 <html>
 <head>
-    <title>LAN Fast Clicker</title>
+    <title>Multiplayer Quiz Bell</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #222; font-family: sans-serif; color: white; }
-        .player { width: 30px; height: 30px; position: absolute; border-radius: 50%; transition: 0.1s; display: flex; align-items: center; justify-content: center; font-size: 10px; }
-        #myBox { background: #00ff00; z-index: 10; border: 2px solid white; }
-        .other { background: #ff4d4d; }
-        .name-tag { position: absolute; top: -20px; white-space: nowrap; font-weight: bold; }
-        #game-ui { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 100%; }
-        #mainBtn { padding: 30px 60px; font-size: 30px; cursor: pointer; border-radius: 15px; border: none; background: #3498db; color: white; box-shadow: 0 8px #2980b9; }
-        #mainBtn:active { box-shadow: 0 2px #2980b9; transform: translateY(4px); }
-        #mainBtn:disabled { background: #555; box-shadow: none; cursor: not-allowed; opacity: 0.7; }
-        #winnerText { font-size: 40px; color: gold; margin-bottom: 20px; height: 50px; text-shadow: 2px 2px 5px black; }
+        body { font-family: sans-serif; text-align: center; background: #2c3e50; color: white; padding-top: 50px; }
+        .btn-bell { 
+            width: 200px; height: 200px; border-radius: 50%; border: none; 
+            background: #e74c3c; box-shadow: 0 10px #c0392b; cursor: pointer;
+            font-size: 24px; color: white; font-weight: bold;
+        }
+        .btn-bell:active { box-shadow: 0 5px #c0392b; transform: translateY(4px); }
+        .btn-bell:disabled { background: #7f8c8d; box-shadow: 0 10px #34495e; cursor: not-allowed; }
+        #status { margin-top: 20px; font-size: 1.5em; color: #f1c40f; }
+        .user-info { position: absolute; top: 10px; right: 10px; font-size: 0.9em; }
     </style>
 </head>
 <body>
-    <div id="game-ui">
-        <div id="winnerText"></div>
-        <button id="mainBtn">PENCET CEPAT!</button>
-    </div>
-    <div id="myBox" class="player"><span class="name-tag">YOU</span></div>
+    <div class="user-info">User: <span id="myId"></span></div>
+    <h1>QUIZ BELL</h1>
+    <button id="bellBtn" class="btn-bell" onclick="pushBell()">TEKAN!</button>
+    <div id="status">Menunggu...</div>
 
     <script>
-        const myBox = document.getElementById('myBox');
-        const mainBtn = document.getElementById('mainBtn');
-        const winnerText = document.getElementById('winnerText');
-        
-        // Input ID di awal
-        let myId = prompt("Masukkan Username Unik Anda:", "Player_" + Math.floor(Math.random() * 1000));
-        if (!myId) myId = "Guest" + Math.floor(Math.random() * 100);
+        let myId = "User" + Math.floor(Math.random() * 1000);
+        let inputId = prompt("Masukkan Username Anda:", myId);
+        myId = inputId || myId;
+        document.getElementById('myId').innerText = myId;
 
-        const bell = new AudioContext();
+        const audio = new Audio('https://www.soundjay.com/buttons/beep-01a.mp3');
 
-        function playBell() {
-            const osc = bell.createOscillator();
-            const gain = bell.createGain();
-            osc.type = "sawtooth";
-            osc.frequency.value = 440;
-            gain.gain.value = 0.1;
-            osc.connect(gain);
-            gain.connect(bell.destination);
-            osc.start();
-            setTimeout(() => osc.stop(), 1000);
+        function pushBell() {
+            fetch('/push?id=' + encodeURIComponent(myId));
         }
 
-        document.addEventListener('mousemove', (e) => {
-            myBox.style.left = e.pageX + 'px';
-            myBox.style.top = e.pageY + 'px';
-            sync(e.pageX, e.pageY);
-        });
-
-        mainBtn.addEventListener('click', () => {
-            sync(parseInt(myBox.style.left), parseInt(myBox.style.top), true);
-        });
-
-        async function sync(x, y, isClick = false) {
-            let url = `?id=\${encodeURIComponent(myId)}&x=\${x}&y=\${y}`;
-            if (isClick) url += '&action=klik';
-
+        async function updateStatus() {
             try {
-                const res = await fetch(url);
+                const res = await fetch('/status');
                 const data = await res.json();
-                updateUI(data);
+                const btn = document.getElementById('bellBtn');
+                const statusDiv = document.getElementById('status');
+
+                if (data.isLocked) {
+                    btn.disabled = true;
+                    statusDiv.innerText = "PEMENANG: " + data.winner;
+                    if (data.winner === data.lastWinnerAlert) {
+                        // Efek suara hanya dipicu sekali lewat state lokal jika perlu
+                    }
+                } else {
+                    btn.disabled = false;
+                    statusDiv.innerText = "Silahkan Tekan!";
+                }
             } catch (e) {}
         }
 
-        function updateUI(data) {
-            const { players, game, serverTime } = data;
-
-            // Update Status Tombol & Pemenang
-            if (serverTime < game.disabledUntil) {
-                mainBtn.disabled = true;
-                winnerText.innerText = "PEMENANG: " + game.winner;
-                // Jika baru saja diklik (efek suara lokal)
-                if (mainBtn.dataset.active === "true") {
-                    playBell();
-                    mainBtn.dataset.active = "false";
-                }
-            } else {
-                mainBtn.disabled = false;
-                winnerText.innerText = "";
-                mainBtn.dataset.active = "true";
-            }
-
-            // Render Pemain Lain
-            for (let id in players) {
-                if (id === myId) continue;
-                let el = document.getElementById(id);
-                if (!el) {
-                    el = document.createElement('div');
-                    el.id = id;
-                    el.className = 'player other';
-                    el.innerHTML = `<span class="name-tag">\${id}</span>`;
-                    document.body.appendChild(el);
-                }
-                el.style.left = players[id].x + 'px';
-                el.style.top = players[id].y + 'px';
-            }
-        }
-
-        // Loop Sinkronisasi tetap jalan meski mouse diam
-        setInterval(() => {
-            sync(parseInt(myBox.style.left) || 0, parseInt(myBox.style.top) || 0);
-        }, 500);
+        setInterval(updateStatus, 500);
     </script>
 </body>
 </html>
 "@
-            $buffer = [System.Text.Encoding]::UTF8.GetBytes($html)
-            $response.ContentType = "text/html"
-            $response.ContentLength64 = $buffer.Length
-            $response.OutputStream.Write($buffer, 0, $buffer.Length)
-        }
-        $response.Close()
+
+# Logic Loop Server
+while ($listener.IsListening) {
+    $context = $listener.GetContext()
+    $request = $context.Request
+    $response = $context.Response
+
+    # Reset lock jika sudah 10 detik
+    if ($global:isLocked -and (Get-Date) -gt $global:lockTime.AddSeconds(10)) {
+        $global:isLocked = $false
+        $global:lastWinner = ""
     }
-} finally {
-    $listener.Stop()
+
+    if ($request.Url.PathAndQuery -eq "/status") {
+        $json = "{`"isLocked`": $($global:isLocked | ConvertTo-Json), `"winner`": `"$($global:lastWinner)`"}"
+        $buffer = [System.Text.Encoding]::UTF8.GetBytes($json)
+        $response.ContentType = "application/json"
+    }
+    elseif ($request.Url.PathAndQuery -like "/push*") {
+        if (-not $global:isLocked) {
+            $global:isLocked = $true
+            $global:lockTime = Get-Date
+            $global:lastWinner = $request.QueryString["id"]
+            Write-Host "Bell ditekan oleh: $($global:lastWinner)"
+        }
+        $buffer = [System.Text.Encoding]::UTF8.GetBytes("OK")
+    }
+    else {
+        $buffer = [System.Text.Encoding]::UTF8.GetBytes($htmlContent)
+        $response.ContentType = "text/html"
+    }
+
+    $response.ContentLength64 = $buffer.Length
+    $response.OutputStream.Write($buffer, 0, $buffer.Length)
+    $response.Close()
 }
