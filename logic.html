@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bel Kompetisi</title>
+    <title>Bel Kompetisi LAN</title>
     <style>
         body {
             display: flex;
@@ -11,153 +11,125 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            gap: 15px;
-            background-color: #f0f0f0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            gap: 20px;
+            background-color: #2c3e50;
+            font-family: sans-serif;
+            color: white;
         }
 
-        #myIdText {
-            font-size: 20px;
-            font-weight: bold;
-            background: white;
-            padding: 10px 25px;
-            border-radius: 50px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            color: #333;
-        }
-
-        /* Area Pemenang */
         #pemenangBox {
-            font-size: 24px;
-            color: #e67e22;
+            font-size: 28px;
             font-weight: bold;
-            height: 30px; /* Supaya layout tidak lompat saat teks muncul/hilang */
-            margin-bottom: 10px;
+            color: #f1c40f;
+            height: 40px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
 
         .btn-bel {
             padding: 50px 100px;
-            font-size: 35px;
+            font-size: 30px;
             font-weight: bold;
             color: white;
             border: none;
-            border-radius: 25px;
+            border-radius: 20px;
             cursor: pointer;
-            transition: all 0.2s;
             box-shadow: 0 10px #2980b9;
+            transition: 0.1s;
         }
 
         .biru { background-color: #3498db; }
-        
-        /* Efek saat ditekan atau orang lain menang */
-        .tertekan { 
-            background-color: #e74c3c !important; 
-            box-shadow: 0 4px #c0392b !important;
-            transform: translateY(6px); 
+
+        /* Style saat tombol terkunci/ada pemenang */
+        button:disabled {
+            background-color: #95a5a6 !important;
+            box-shadow: none !important;
+            transform: translateY(5px);
+            cursor: not-allowed;
         }
 
-        button:disabled {
-            background-color: #bdc3c7 !important;
-            box-shadow: none !important;
-            cursor: not-allowed;
+        #myIdText {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
 
     <div id="pemenangBox"></div>
-    <div id="myIdText">Memuat...</div>
-    <button id="btnBiru" class="btn-bel biru" onclick="mainkanBel()">BEL!</button>
+    <div id="myIdText"></div>
+    <button id="btnBiru" class="btn-bel biru" onclick="mainkanBel()">TEKAN BEL</button>
 
     <script>
         const btnBiru = document.getElementById('btnBiru');
-        const textPemenang = document.getElementById('pemenangBox');
+        const displayPemenang = document.getElementById('pemenangBox');
         
-        const defaultId = 'Player_' + Math.floor(Math.random() * 1000);
-        const myId = prompt("Masukkan Username Anda:", defaultId) || defaultId;
-        document.getElementById('myIdText').innerText = myId;
+        // Kita buat ID berupa angka agar bisa masuk ke variabel 'y' server
+        const myNumId = Math.floor(Math.random() * 10000);
+        const myName = prompt("Masukkan Nama Anda:", "Player_" + myNumId) || "Player_" + myNumId;
+        document.getElementById('myIdText').innerText = "User: " + myName + " (ID: " + myNumId + ")";
 
-        let statusSaya = 0; // 0 = diam, 1 = memencet
-        let pemenangSaatIni = "";
+        let sedangMengunci = false;
+        let x = 0; // Status tekan
+        let y = 0; // ID pemenang
 
         function mainkanBel() {
-            if (btnBiru.disabled) return;
+            if (sedangMengunci) return;
 
-            // Suara Bel
+            // Bunyi
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            oscillator.type = 'sawtooth';
-            oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); 
-            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            oscillator.start();
-            setTimeout(() => oscillator.stop(), 800);
+            const osc = audioCtx.createOscillator();
+            osc.type = 'sawtooth';
+            osc.connect(audioCtx.destination);
+            osc.start();
+            setTimeout(() => osc.stop(), 500);
 
-            // Logika Client
-            statusSaya = 1;
-            pemenangSaatIni = myId; // Tandai diri sendiri sebagai pemenang lokal
+            // Set data untuk dikirim ke server
+            x = 1;
+            y = myNumId;
             
-            btnBiru.disabled = true;
-            btnBiru.classList.add('tertekan');
-            textPemenang.innerText = "PEMENANG: " + myId;
+            kunciTombol(myName);
 
-            // Cooldown 10 detik
+            // Lepas kunci setelah 10 detik
             setTimeout(() => {
-                btnBiru.disabled = false;
-                btnBiru.classList.remove('tertekan');
-                textPemenang.innerText = "";
-                statusSaya = 0;
-                pemenangSaatIni = "";
+                bukaTombol();
             }, 10000);
         }
 
-        // Sinkronisasi dengan Server PowerShell setiap 500ms
+        function kunciTombol(nama) {
+            sedangMengunci = true;
+            btnBiru.disabled = true;
+            displayPemenang.innerText = "PEMENANG: " + nama;
+        }
+
+        function bukaTombol() {
+            sedangMengunci = false;
+            btnBiru.disabled = false;
+            displayPemenang.innerText = "";
+            x = 0;
+            y = 0;
+        }
+
+        // Loop Sinkronisasi (Mengikuti cara game kamu sebelumnya)
         setInterval(() => {
-            updateServer();
-        }, 500);
-
-        function updateServer() {
-            // x = status pencet, y = nama pemenang
-            fetch(`?id=${myId}&x=${statusSaya}&y=${pemenangSaatIni}`)
-                .then(res => res.json())
+            fetch(`?id=${myNumId}&x=${x}&y=${y}`)
+                .then(response => response.json())
                 .then(data => {
-                    cekDataGlobal(data);
-                });
-        }
-
-        function cekDataGlobal(data) {
-            let adaPemenangLain = false;
-            let namaPemenangLain = "";
-
-            for (let id in data) {
-                if (id === myId) continue;
-
-                // Jika ada orang lain yang x-nya 1, berarti mereka mencet
-                if (data[id].x == "1") {
-                    adaPemenangLain = true;
-                    namaPemenangLain = id; 
-                    break;
-                }
-            }
-
-            // Jika orang lain mencet dan kita sedang tidak memencet (tidak disable)
-            if (adaPemenangLain && statusSaya === 0) {
-                btnBiru.disabled = true;
-                btnBiru.classList.add('tertekan');
-                textPemenang.innerText = "PEMENANG: " + namaPemenangLain;
-
-                // Ikut disable selama 10 detik agar sinkron
-                setTimeout(() => {
-                    if (statusSaya === 0) { // Pastikan bukan kita yang mencet
-                        btnBiru.disabled = false;
-                        btnBiru.classList.remove('tertekan');
-                        textPemenang.innerText = "";
+                    for (let id in data) {
+                        // Jika ada ID lain yang mengirim x=1
+                        if (id != myNumId && data[id].x == "1") {
+                            if (!sedangMengunci) {
+                                kunciTombol("ID " + data[id].y); // data[id].y berisi ID pemenang
+                                
+                                // Ikut buka setelah 10 detik
+                                setTimeout(() => {
+                                    bukaTombol();
+                                }, 10000);
+                            }
+                        }
                     }
-                }, 10000);
-            }
-        }
+                });
+        }, 500);
     </script>
 </body>
 </html>
