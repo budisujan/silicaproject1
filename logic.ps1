@@ -1,112 +1,117 @@
-# --- CONFIGURATION ---
-$Port = 12345
-$HtmlFile = "$PSScriptRoot\index.html"
+# Konfigurasi
+$port = 3000
+$ip = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.InterfaceAlias -notlike "*Loopback*"}).IPAddress[0]
+$listener = New-Object System.Net.HttpListener
+$listener.Prefixes.Add("http://*:$port/")
+$listener.Start()
 
-# --- 1. MEMBUAT FILE HTML (GABUNGAN HTML, CSS, JS) ---
-$HtmlContent = @"
+# Logika Game
+$gameState = @{
+    winner = ""
+    isLocked = $false
+}
+
+Write-Host "--- SERVER BEL AKTIF ---" -ForegroundColor Cyan
+Write-Host "Minta teman kamu buka: http://$ip:$port" -ForegroundColor Yellow
+Write-Host "Tekan Ctrl+C untuk berhenti."
+
+# Fungsi untuk menangani file HTML
+function Get-Html {
+    return @"
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Bel Multiplayer LAN</title>
+    <title>LAN Quiz Bell</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #1a1a2e; color: white; padding-top: 50px; }
-        .container { max-width: 400px; margin: auto; border: 2px solid #16213e; padding: 20px; border-radius: 15px; background: #0f3460; }
-        #user-info { font-size: 1.1em; color: #e94560; margin-bottom: 20px; font-weight: bold; }
-        #btnBuzz { 
-            width: 200px; height: 200px; border-radius: 50%; border: none;
-            background: #e94560; color: white; font-size: 28px; font-weight: bold;
-            cursor: pointer; box-shadow: 0 10px #950740; transition: 0.1s;
+        body { font-family: sans-serif; text-align: center; background: #222; color: #fff; padding-top: 50px; }
+        #btn { 
+            width: 250px; height: 250px; border-radius: 50%; border: 10px solid #444;
+            background: radial-gradient(#ff4b2b, #ff416c); color: white; font-size: 30px; 
+            font-weight: bold; cursor: pointer; box-shadow: 0 10px #800;
         }
-        #btnBuzz:active { box-shadow: 0 2px #950740; transform: translateY(8px); }
-        #btnBuzz:disabled { background: #53354a; box-shadow: none; cursor: not-allowed; opacity: 0.6; }
-        #status { margin-top: 30px; font-size: 1.5em; min-height: 40px; color: #f1c40f; }
-        .footer { margin-top: 20px; font-size: 0.8em; opacity: 0.5; }
+        #btn:active { transform: translateY(5px); box-shadow: 0 5px #800; }
+        #btn:disabled { background: #555; box-shadow: none; cursor: not-allowed; opacity: 0.5; }
+        .status { font-size: 24px; margin-top: 20px; color: #f1c40f; }
+        .username { margin-bottom: 20px; font-size: 18px; color: #00ff00; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div id="user-info">Username: <span id="display-name">...</span></div>
-        <button id="btnBuzz" onclick="pressButton()">TEKAN!</button>
-        <div id="status">Siap...</div>
-        <div class="footer">Menunggu sinyal LAN...</div>
-    </div>
+    <div class="username">User: <span id="myName"></span></div>
+    <button id="btn" onclick="buzz()">TEKAN BEL!</button>
+    <div id="status" class="status">Menunggu...</div>
 
     <script>
-        // Generate Username Acak
-        let randomNum = Math.floor(Math.random() * 900) + 100;
-        let defaultName = "Pemain_" + randomNum;
-        let username = prompt("Masukkan ID/Username Anda:", defaultName) || defaultName;
-        document.getElementById('display-name').innerText = username;
+        const randName = "User" + Math.floor(Math.random() * 999);
+        const myName = prompt("Masukkan ID:", randName) || randName;
+        document.getElementById('myName').innerText = myName;
 
-        const btn = document.getElementById('btnBuzz');
+        const btn = document.getElementById('btn');
         const status = document.getElementById('status');
+        const audio = new Audio('https://www.soundjay.com/buttons/sounds/beep-01a.mp3');
 
-        function pressButton() {
-            // Mengirim perintah ke PowerShell via perubahan judul window (trik Windows 7)
-            document.title = "BUZZ:" + username;
+        function buzz() {
+            fetch('/buzz?user=' + myName);
         }
 
-        // Fungsi ini dipanggil oleh PowerShell untuk update UI
-        function updateStatus(msg, disable) {
-            status.innerText = msg;
-            btn.disabled = disable;
-            if(msg.includes("TEEETTT")) {
-                let audio = new Audio('https://www.soundjay.com/buttons/sounds/beep-01a.mp3');
-                audio.play();
-            }
-        }
+        // Cek status server setiap 0.5 detik (Polling)
+        setInterval(() => {
+            fetch('/state')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.isLocked) {
+                        btn.disabled = true;
+                        status.innerText = "PEMENANG: " + data.winner;
+                        if(data.winner === myName) { status.innerText = "ANDA PEMENANGNYA!"; }
+                    } else {
+                        btn.disabled = false;
+                        status.innerText = "SIAP!";
+                    }
+                });
+        }, 500);
     </script>
 </body>
 </html>
 "@
-$HtmlContent | Out-File -FilePath $HtmlFile -Encoding UTF8
+}
 
-# --- 2. LOGIKA SERVER POWERSHELL ---
-Add-Type -AssemblyName System.Windows.Forms
-$udp = New-Object System.Net.Sockets.UdpClient($Port)
-$endpoint = New-Object System.Net.IPEndPoint([System.Net.IPAddress]::Any, $Port)
+# Loop Server Utama
+while ($listener.IsListening) {
+    $context = $listener.GetContext()
+    $req = $context.Request
+    $res = $context.Response
 
-# Buka Browser
-Start-Process $HtmlFile
-Write-Host "Server Bel Aktif di Port $Port. Jangan tutup jendela ini!" -ForegroundColor Green
+    $url = $req.RawUrl
+    $res.ContentType = "text/html"
 
-$Locked = $false
-$Winner = ""
-
-while ($true) {
-    # 1. Cek jika user menekan tombol di browser (Cek via Window Title)
-    $process = Get-Process | Where-Object {$_.MainWindowTitle -like "BUZZ:*"}
-    if ($process -and -not $Locked) {
-        $Winner = $process.MainWindowTitle.Replace("BUZZ:", "")
-        # Broadcast ke semua orang di LAN
-        $payload = [System.Text.Encoding]::ASCII.GetBytes("WINNER:$Winner")
-        $broadcast = New-Object System.Net.Sockets.UdpClient
-        $broadcast.EnableBroadcast = $true
-        $dest = New-Object System.Net.IPEndPoint([System.Net.IPAddress]::Broadcast, $Port)
-        $broadcast.Send($payload, $payload.Length, $dest) | Out-Null
-        $broadcast.Close()
-        # Reset judul agar tidak terdeteksi dua kali
-        $process.MainWindowTitle = "Bel Multiplayer LAN" 
-    }
-
-    # 2. Cek kiriman dari LAN
-    if ($udp.Available -gt 0) {
-        $data = $udp.Receive([ref]$endpoint)
-        $msg = [System.Text.Encoding]::ASCII.GetString($data)
-
-        if ($msg -like "WINNER:*" -and -not $Locked) {
-            $Locked = $true
-            $WinnerName = $msg.Split(":")[1]
-            Write-Host "PEMENANG: $WinnerName" -ForegroundColor Yellow
+    if ($url -eq "/") {
+        $buffer = [System.Text.Encoding]::UTF8.GetBytes((Get-Html))
+    } 
+    elseif ($url -like "/buzz*") {
+        if (-not $gameState.isLocked) {
+            $user = $req.QueryString["user"]
+            $gameState.winner = $user
+            $gameState.isLocked = $true
+            Write-Host "BZZZZT! $user menekan bel!" -ForegroundColor Red
             
-            # Update UI via script (Simulasi interaksi browser)
-            # Karena Windows 7 terbatas, user cukup melihat status di layar
-            # Kita gunakan pesan sistem atau instruksi di console
-            
-            Start-Sleep -Seconds 10
-            $Locked = $false
-            Write-Host "Bel Kembali Aktif!" -ForegroundColor Cyan
+            # Reset otomatis setelah 10 detik
+            $timer = New-Object System.Timers.Timer(10000)
+            Register-ObjectEvent -InputObject $timer -EventName Elapsed -Action {
+                $Global:gameState.isLocked = $false
+                $Global:gameState.winner = ""
+                Unregister-Event -SourceIdentifier $EventSubscriber.SourceIdentifier
+            } | Out-Null
+            $timer.AutoReset = $false
+            $timer.Start()
         }
+        $buffer = [System.Text.Encoding]::UTF8.GetBytes('{"status":"ok"}')
     }
-    Start-Sleep -Milliseconds 100
+    elseif ($url -eq "/state") {
+        $res.ContentType = "application/json"
+        $json = '{"winner":"' + $gameState.winner + '", "isLocked":' + $gameState.isLocked.ToString().ToLower() + '}'
+        $buffer = [System.Text.Encoding]::UTF8.GetBytes($json)
+    }
+
+    $res.ContentLength64 = $buffer.Length
+    $res.OutputStream.Write($buffer, 0, $buffer.Length)
+    $res.Close()
 }
