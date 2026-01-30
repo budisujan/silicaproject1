@@ -6,7 +6,12 @@ const dlHandler = document.getElementById('dlHandler');
 let isAuth = false;
 let currentUnit = "";
 
-// Database dengan link yang sudah di-encode ke Base64
+window.onload = () => termInput.focus();
+
+
+document.addEventListener('click', () => termInput.focus());
+
+
 const silicaAuth = {
     "morning_star": {
         serial: "65a#Y4",
@@ -67,6 +72,7 @@ termInput.addEventListener('keypress', function(e) {
 
         this.value = '';
         scrollToBottom();
+        this.focus(); // Memastikan tetap fokus setelah eksekusi
     }
 });
 
@@ -91,6 +97,7 @@ function handleLogin(name, serial) {
             currentUnit = name;
             promptPath.innerText = `SYSTEM@${name.toUpperCase()}:~$`;
             writeLine(">> ACCESS GRANTED. FILESYSTEM MOUNTED.", "#00ff00");
+            termInput.focus(); // Fokus kembali setelah delay login
         }, 800);
     } else {
         writeLine(">> ERROR: ACCESS DENIED.", "#ff0000");
@@ -135,9 +142,9 @@ function startDownload(encodedUrl) {
             clearInterval(intv);
             writeLine(">> SUCCESS: DATA RECEIVED.", "#00ff00");
             
-            // Proses decoding Base64 di sini
             const decodedUrl = atob(encodedUrl);
             dlHandler.src = decodedUrl;
+            termInput.focus(); // Fokus setelah download selesai
         }
     }, 150);
 }
@@ -151,4 +158,4 @@ function writeLine(text, color) {
 
 function scrollToBottom() {
     outputLog.scrollTop = outputLog.scrollHeight;
-                }
+}
