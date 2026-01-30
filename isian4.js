@@ -28,15 +28,34 @@ window.addEventListener('click', () => {
 });
 
 // Gunakan Keydown pada window sebagai cadangan jika listener input "mati"
+function executeCommand() {
+    const val = termInput.value.trim();
+    if (val === "") return;
+
+    const args = val.split(' ');
+    const cmd = args[0].toLowerCase();
+    const target = args[1];
+
+    writeLine(`${promptPath.innerText} ${val}`, "#fff");
+
+    if (cmd === 'clear') {
+        outputLog.innerHTML = '';
+    } else if (cmd === 'help') {
+        showHelp();
+    } else if (!isAuth) {
+        handleLogin(cmd, target);
+    } else {
+        handleSystem(cmd, target);
+    }
+
+    termInput.value = '';
+    scrollToBottom();
+    autoFocusInput()
 termInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
-        // Eksekusi terminal
-        processCommand(this.value);
-        this.value = '';
-        e.preventDefault();
+        executeCommand();
     }
 });
-
 function processCommand(val) {
     const cleanVal = val.trim();
     if (!cleanVal) return;
