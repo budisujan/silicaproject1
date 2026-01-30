@@ -51,34 +51,13 @@ function executeCommand() {
     termInput.value = '';
     scrollToBottom();
     autoFocusInput()
+}
 termInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
         executeCommand();
     }
 });
-function processCommand(val) {
-    const cleanVal = val.trim();
-    if (!cleanVal) return;
 
-    const args = cleanVal.split(' ');
-    const cmd = args[0].toLowerCase();
-    const target = args[1];
-
-    writeLine(`${promptPath.innerText} ${cleanVal}`, "#fff");
-
-    if (cmd === 'clear') {
-        outputLog.innerHTML = '';
-    } else if (cmd === 'help') {
-        showHelp();
-    } else if (!isAuth) {
-        handleLogin(cmd, target);
-    } else {
-        handleSystem(cmd, target);
-    }
-    
-    scrollToBottom();
-    setTimeout(keepFocus, 50);
-}
 
 // --- FUNGSI PENDUKUNG ---
 
