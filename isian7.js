@@ -1,4 +1,4 @@
-// Gunakan konstanta yang sama
+
 const outputLog = document.getElementById('output');
 const termInput = document.getElementById('termInput');
 const promptPath = document.getElementById('promptPath');
@@ -16,18 +16,19 @@ const silicaAuth = {
     "phoenix_fire": { serial: "124251", file: "CLODES_NOTE.raw", link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xUlk2OUJZbGM0aWRVOWU4NElrVnZYdFJwMmZxWXZ1bEU=", desc: "user:h_clode" }
 };
 
-// --- FIX CORE: RE-BINDING & GLOBAL LISTENER ---
+
+
 
 function keepFocus() {
     termInput.focus();
 }
 
-// Paksa fokus setiap kali user klik di mana saja
+
 window.addEventListener('click', () => {
     setTimeout(keepFocus, 10);
 });
 
-// Gunakan Keydown pada window sebagai cadangan jika listener input "mati"
+
 function executeCommand() {
     const val = termInput.value.trim();
     if (val === "") return;
@@ -57,9 +58,10 @@ termInput.addEventListener('keydown', function(e) {
         executeCommand();
     }
 });
-
-
-// --- FUNGSI PENDUKUNG ---
+enterBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    executeCommand();
+});
 
 function showHelp() {
     if (!isAuth) {
@@ -135,5 +137,5 @@ function scrollToBottom() {
     outputLog.scrollTop = outputLog.scrollHeight;
 }
 
-// Jalankan fokus pertama kali
+
 setTimeout(keepFocus, 100);
