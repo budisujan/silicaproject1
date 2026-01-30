@@ -57,11 +57,6 @@ termInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
         executeCommand();
     }
-   else if (e.key === 'Backspace') {
-    e.preventDefault(); 
-    const currentText = termInput.value;
-    termInput.value = currentText.substring(0, currentText.length - 1);
-  }
 });
 enterBtn.addEventListener('click', function(e) {
     e.preventDefault();
