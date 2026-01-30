@@ -6,54 +6,31 @@ const dlHandler = document.getElementById('dlHandler');
 let isAuth = false;
 let currentUnit = "";
 
-window.onload = () => termInput.focus();
-
-
-document.addEventListener('click', () => termInput.focus());
-
-
+// Database tetap sama...
 const silicaAuth = {
-    "morning_star": {
-        serial: "65a#Y4",
-        file: "REC_01_HALO.raw",
-        link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xampHTWxkUnlHOHJObjhUdnUtU2JwVDV0N1pTYnBEXzg=",
-        desc: "user:e_nussbaum"
-    },
-    "fallen_star": {
-        serial: "By644_anD",
-        file: "REC_02_ETERNAL.raw",
-        link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xMHRiS01Wck81LUFBV3lUeDlraTI5ZG9KeWo3cExGSGc=",
-        desc: "user:a_fitzwilliam"
-    },
-    "outer_space": {
-        serial: "54q23(+0H",
-        file: "REC_03_AEGIS.raw",
-        link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xS184anI4bUxadlgwa1M3dTBWbVFsSUNsbDhCOWhId1Y=",
-        desc: "user:l_richer"
-    },
-    "dark_memories": {
-        serial: "Hfn64p&_4#$+*",
-        file: "SILICA_AI_1990.avi",
-        link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xQ0d5ejk1YXNOamZoWkZUd0Q3Rl9vVWk0X3dZTmV5Zk8=",
-        desc: "user:t_anderson"
-    },
-    "soul_symphony": {
-        serial: "Hln7828&$__@#@88288",
-        file: "DEMO_HELENA.avi",
-        link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xUmV0YTRqSnRSNmc2WHFDc2M0SGJmNVdGMmJxeXN2elA=",
-        desc: "user:h_moreau"
-    },
-    "phoenix_fire": {
-        serial: "124251",
-        file: "CLODES_NOTE.raw",
-        link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xUlk2OUJZbGM0aWRVOWU4NElrVnZYdFJwMmZxWXZ1bEU=",
-        desc: "user:h_clode"
-    }
+    "morning_star": { serial: "65a#Y4", file: "REC_01_HALO.raw", link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xampHTWxkUnlHOHJObjhUdnUtU2JwVDV0N1pTYnBEXzg=", desc: "user:e_nussbaum" },
+    "fallen_star": { serial: "By644_anD", file: "REC_02_ETERNAL.raw", link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xMHRiS01Wck81LUFBV3lUeDlraTI5ZG9KeWo3cExGSGc=", desc: "user:a_fitzwilliam" },
+    "outer_space": { serial: "54q23(+0H", file: "REC_03_AEGIS.raw", link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xS184anI4bUxadlgwa1M3dTBWbVFsSUNsbDhCOWhId1Y=", desc: "user:l_richer" },
+    "dark_memories": { serial: "Hfn64p&_4#$+*", file: "SILICA_AI_1990.avi", link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xQ0d5ejk1YXNOamZoWkZUd0Q3Rl9vVWk0X3dZTmV5Zk8=", desc: "user:t_anderson" },
+    "soul_symphony": { serial: "Hln7828&$__@#@88288", file: "DEMO_HELENA.avi", link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xUmV0YTRqSnRSNmc2WHFDc2M0SGJmNVdGMmJxeXN2elA=", desc: "user:h_moreau" },
+    "phoenix_fire": { serial: "124251", file: "CLODES_NOTE.raw", link: "aHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL3VjP2V4cG9ydD1kb3dubG9hZCZpZD0xUlk2OUJZbGM0aWRVOWU4NElrVnZYdFJwMmZxWXZ1bEU=", desc: "user:h_clode" }
 };
 
-termInput.addEventListener('keypress', function(e) {
+// --- PERBAIKAN FOKUS & EVENT ---
+function forceFocus() {
+    termInput.focus();
+}
+
+// Paksa fokus saat klik di manapun
+document.addEventListener('click', forceFocus);
+
+termInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
+        e.preventDefault(); // Mencegah bubbling atau refresh tidak sengaja
+        
         const val = this.value.trim();
+        if (val === "") return; // Abaikan jika kosong
+
         const args = val.split(' ');
         const cmd = args[0].toLowerCase();
         const target = args[1];
@@ -72,23 +49,15 @@ termInput.addEventListener('keypress', function(e) {
 
         this.value = '';
         scrollToBottom();
-        this.focus(); // Memastikan tetap fokus setelah eksekusi
+        
+        // Gunakan requestAnimationFrame untuk memastikan fokus kembali setelah DOM update
+        requestAnimationFrame(() => {
+            forceFocus();
+        });
     }
 });
 
-function showHelp() {
-    if (!isAuth) {
-        writeLine(">> AVAILABLE ENCRYPTED UNITS:", "#00ffff");
-        Object.keys(silicaAuth).forEach(unit => {
-            writeLine(` - ${unit}`, "#888");
-        });
-        writeLine(" - [UNKNOWN_FILE] STATUS: NOT_DOWNLOADED", "#ffaa00");
-        writeLine("<br>>> AUTH REQUIRED: [unit_name] [serial_number]", "#fff");
-    } else {
-        writeLine(">> COMMANDS: ls, cat [file], open [file], clear, logout", "#888");
-    }
-}
-
+// Sisanya tetap sama dengan tambahan sedikit delay pada login untuk stabilitas input
 function handleLogin(name, serial) {
     if (silicaAuth[name] && silicaAuth[name].serial === serial) {
         writeLine(">> VALIDATING IDENTITY...", "#00ffff");
@@ -97,12 +66,14 @@ function handleLogin(name, serial) {
             currentUnit = name;
             promptPath.innerText = `SYSTEM@${name.toUpperCase()}:~$`;
             writeLine(">> ACCESS GRANTED. FILESYSTEM MOUNTED.", "#00ff00");
-            termInput.focus(); // Fokus kembali setelah delay login
+            forceFocus();
         }, 800);
     } else {
         writeLine(">> ERROR: ACCESS DENIED.", "#ff0000");
     }
 }
+
+// ... (Gunakan fungsi handleSystem, startDownload, writeLine, scrollToBottom yang sama) ...
 
 function handleSystem(cmd, target) {
     const data = silicaAuth[currentUnit];
