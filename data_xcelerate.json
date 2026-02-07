@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "nama": "Gravitasi",
+    "nilai": 9.8
+  },
+  {
+    "nama": "Kecepatan_Cahaya",
+    "nilai": 299792458
+  },
+  {
+    "nama": "Hako",
+    "nilai": 122
+  }
+]
