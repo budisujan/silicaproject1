@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cek KBBI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; padding: 20px; background: #fafafa; }
+        .box { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; max-width: 350px; }
+        input { width: 100%; padding: 10px; box-sizing: border-box; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        button { width: 100%; padding: 10px; background: #2ea44f; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #res { margin-top: 15px; padding: 10px; border-radius: 5px; display: none; text-align: center; font-weight: bold; }
+        .ada { background: #dcfce7; color: #166534; }
+        .tidak { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h3>🔍 Cek Kata KBBI</h3>
+        <input type="text" id="kata" placeholder="Ketik kata...">
+        <button onclick="cek()">Periksa</button>
+        <div id="res"></div>
+    </div>
+
+    <script>
+        async function cek() {
+            const kata = document.getElementById('kata').value;
+            const res = document.getElementById('res');
+            if(!kata) return;
+
+            res.style.display = "block";
+            res.innerHTML = "Memeriksa...";
+            res.className = "";
+
+            try {
+                // Di GitHub Pages, fetch ini tidak akan diblokir
+                const resp = await fetch(`https://kbbi-api-zhirrr.vercel.app/api/kbbi?text=${kata}`);
+                const data = await resp.json();
+
+                if(data.ok || (data.data && data.data.length > 0)) {
+                    res.innerHTML = "✅ Ada di KBBI";
+                    res.className = "ada";
+                } else {
+                    res.innerHTML = "❌ Tidak Ditemukan";
+                    res.className = "tidak";
+                }
+            } catch (e) {
+                res.innerHTML = "⚠️ API Error";
+            }
+        }
+    </script>
+</body>
+</html>
